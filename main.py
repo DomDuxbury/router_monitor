@@ -24,19 +24,48 @@ def configure_router(session):
     ), phonename
 
 
-def is_owner_home(loop, router, phonename):
-    # Now you can use the router object to call methods
-    clients = loop.run_until_complete(router.async_get_data(AsusData.CLIENTS))
+def is_owner_home(clients, phonename):
+    return check_if_device_is_connected(clients, phonename)
 
+
+def get_laptop_mode(clients):
+    linux_is_connected = check_if_device_is_connected(clients, "cachyos-x8664")
+    windows_is_connected = check_if_device_is_connected(clients, "MSFT 5 0")
+
+    if linux_is_connected:
+        return "linux"
+    elif windows_is_connected:
+        return "windows"
+    else:
+        return "offline"
+
+
+def check_if_device_is_connected(clients, device_name: str):
     for mac in clients:
         client = clients[mac]
         if (
-            client.description.name == "iPhone-17467328"
-            and client.state is not ConnectionState.DISCONNECTED
+            client.description.name == device_name
+            and client.state is ConnectionState.CONNECTED
         ):
             return True
 
     return False
+
+
+def get_extra_clients_connected(clients, owner_is_home, laptop_mode):
+    connected_clients = filter(
+        lambda client: client.state is ConnectionState.CONNECTED, clients.values()
+    )
+    num_clients_online = len(list(connected_clients))
+    expected_clients = 1
+
+    if owner_is_home:
+        expected_clients = expected_clients + 1
+
+    if laptop_mode != "offline":
+        expected_clients = expected_clients + 1
+
+    return num_clients_online - expected_clients
 
 
 def main():
@@ -50,14 +79,23 @@ def main():
     last_in = 0
     last_out = 0
 
-    for x in range(1, 10):
+    for x in range(0, 10):
         res = loop.run_until_complete(router.async_get_data(AsusData.NETWORK))
         total_in = res["bridge"]["rx"]
         total_out = res["bridge"]["tx"]
 
         change_in = total_in - last_in
         change_out = total_out - last_out
-        owner_is_home = is_owner_home(loop, router, phonename)
+        clients = loop.run_until_complete(router.async_get_data(AsusData.CLIENTS))
+
+        owner_is_home = is_owner_home(clients, phonename)
+        laptop_mode = get_laptop_mode(clients)
+        extra_clients_connected = get_extra_clients_connected(
+            clients, owner_is_home, laptop_mode
+        )
+
+        print(f"laptop mode: {laptop_mode}")
+        print(f"extra clients connected: {extra_clients_connected}")
 
         if owner_is_home:
             print("Dom is home")
