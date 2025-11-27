@@ -1,0 +1,10 @@
+{
+    "type":"object",
+    "properties":{
+        "laptop_mode":{"type":"string"},
+        "num_extra_clients":{"type":"number"},
+        "owner_is_home":{"type":"boolean"},
+        "data_in":{"type":"number"},
+        "data_out":{"type":"number"}
+    }
+}

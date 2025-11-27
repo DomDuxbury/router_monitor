@@ -3,7 +3,9 @@ import asyncio
 import time
 from asusrouter import AsusRouter, AsusData
 from asusrouter.modules.connection import ConnectionState
+from kafka import KafkaProducer
 import configparser
+import json
 
 
 def configure_router(session):
@@ -25,6 +27,7 @@ def configure_router(session):
 
 
 def is_owner_home(clients, phonename):
+    phonename = "iPhone"
     return check_if_device_is_connected(clients, phonename)
 
 
@@ -71,6 +74,10 @@ def get_extra_clients_connected(clients, owner_is_home, laptop_mode):
 def main():
     loop = asyncio.new_event_loop()
     session = aiohttp.ClientSession(loop=loop)
+    producer = KafkaProducer(
+        bootstrap_servers="localhost:9092",
+        value_serializer=lambda v: json.dumps(v).encode("utf-8"),
+    )
     router, phonename = configure_router(session)
 
     # Connect to the router
@@ -79,7 +86,7 @@ def main():
     last_in = 0
     last_out = 0
 
-    for x in range(0, 10):
+    for x in range(0, 9999999999999):
         res = loop.run_until_complete(router.async_get_data(AsusData.NETWORK))
         total_in = res["bridge"]["rx"]
         total_out = res["bridge"]["tx"]
@@ -108,7 +115,19 @@ def main():
         last_in = total_in
         last_out = total_out
 
-        time.sleep(10)
+        if x > 0:
+            producer.send(
+                "jsonRouterOutput",
+                {
+                    "laptop_mode": laptop_mode,
+                    "num_extra_clients": extra_clients_connected,
+                    "owner_is_home": owner_is_home,
+                    "data_in": change_in,
+                    "data_out": change_out,
+                },
+            )
+
+        time.sleep(5)
 
     loop.run_until_complete(router.async_disconnect())
     loop.run_until_complete(session.close())
