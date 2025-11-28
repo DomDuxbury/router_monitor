@@ -1,11 +1,13 @@
 import aiohttp
 import asyncio
-import time
-from asusrouter import AsusRouter, AsusData
+
+# import time
+from asusrouter import AsusRouter
 from asusrouter.modules.connection import ConnectionState
-from kafka import KafkaProducer
+
+# from kafka import KafkaProducer
 import configparser
-import json
+# import json
 
 
 def configure_router(session):
@@ -74,63 +76,80 @@ def get_extra_clients_connected(clients, owner_is_home, laptop_mode):
 def main():
     loop = asyncio.new_event_loop()
     session = aiohttp.ClientSession(loop=loop)
-    producer = KafkaProducer(
-        bootstrap_servers="localhost:9092",
-        value_serializer=lambda v: json.dumps(v).encode("utf-8"),
-    )
+    # producer = KafkaProducer(
+    #     bootstrap_servers="localhost:9092",
+    #     value_serializer=lambda v: json.dumps(v).encode("utf-8"),
+    # )
     router, phonename = configure_router(session)
 
-    # Connect to the router
-    loop.run_until_complete(router.async_connect())
+    # # Connect to the router
+    # loop.run_until_complete(router.async_connect())
 
-    last_in = 0
-    last_out = 0
+    # last_upload = 0
+    # last_download = 0
 
-    for x in range(0, 9999999999999):
-        res = loop.run_until_complete(router.async_get_data(AsusData.NETWORK))
-        total_in = res["bridge"]["rx"]
-        total_out = res["bridge"]["tx"]
+    # for x in range(0, 9999999999999):
+    # res = loop.run_until_complete(router.async_get_data(AsusData.NETWORK))
+    # res = loop.run_until_complete(router.async_get_data(AsusData.CLIENTS))
 
-        change_in = total_in - last_in
-        change_out = total_out - last_out
-        clients = loop.run_until_complete(router.async_get_data(AsusData.CLIENTS))
+    # aimesh = loop.run_until_complete(router.async_get_data(AsusData.AIMESH))
+    # print("aimesh")
+    # print(aimesh)
+    # devicemap = loop.run_until_complete(router.async_get_data(AsusData.DEVICEMAP))
+    # print("devices")
+    # print(devicemap)
 
-        owner_is_home = is_owner_home(clients, phonename)
-        laptop_mode = get_laptop_mode(clients)
-        extra_clients_connected = get_extra_clients_connected(
-            clients, owner_is_home, laptop_mode
-        )
+    # total_upload = res["bridge"]["rx"]
+    # total_download = res["bridge"]["tx"]
 
-        print(f"laptop mode: {laptop_mode}")
-        print(f"extra clients connected: {extra_clients_connected}")
+    # change_download = total_download - last_download
+    # change_upload = total_upload - last_upload
+    # clients = loop.run_until_complete(router.async_get_data(AsusData.CLIENTS))
 
-        if owner_is_home:
-            print("Dom is home")
-        else:
-            print("Dom is not home")
+    # connected_clients = filter(
+    #     lambda client: client.state is ConnectionState.CONNECTED, clients.values()
+    # )
 
-        print(f"data in: {round(change_in / 1000)}kb")
-        print(f"data out: {round(change_out / 1000)}kb")
+    # print(list(connected_clients))
 
-        last_in = total_in
-        last_out = total_out
+    # # simplified_clients = map(lambda client: {"name": client.description.name, "download": client.connection.rx_speed, "upload": client.connection.tx_speed}, connected_clients)
+    # print(change_upload)
+    # print(change_download)
+    # # print(list(simplified_clients))
 
-        if x > 0:
-            producer.send(
-                "jsonRouterOutput",
-                {
-                    "laptop_mode": laptop_mode,
-                    "num_extra_clients": extra_clients_connected,
-                    "owner_is_home": owner_is_home,
-                    "data_in": change_in,
-                    "data_out": change_out,
-                },
-            )
+    # owner_is_home = is_owner_home(clients, phonename)
+    # laptop_mode = get_laptop_mode(clients)
+    # extra_clients_connected = get_extra_clients_connected(
+    #     clients, owner_is_home, laptop_mode
+    # )
 
-        time.sleep(5)
+    # print(f"laptop mode: {laptop_mode}")
+    # print(f"extra clients connected: {extra_clients_connected}")
 
-    loop.run_until_complete(router.async_disconnect())
-    loop.run_until_complete(session.close())
+    # if owner_is_home:
+    #     print("Dom is home")
+    # else:
+    #     print("Dom is not home")
+
+    # print(f"data download: {round(change_download / 1000)}kb")
+    # print(f"data upload: {round(change_upload / 1000)}kb")
+
+    # last_download = total_download
+    # last_upload = total_upload
+
+    # if x > 0:
+    #     producer.send(
+    #         "jsonRouterOutput",
+    #         {
+    #             "laptop_mode": laptop_mode,
+    #             "num_extra_clients": extra_clients_connected,
+    #             "owner_is_home": owner_is_home,
+    #             "data_download": change_upload,
+    #             "data_upload": change_download,
+    #         },
+    #     )
+
+    # time.sleep(5)
 
 
 if __name__ == "__main__":
