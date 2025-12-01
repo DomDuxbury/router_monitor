@@ -1,2 +1,3 @@
 .router_config.ini
 .network_config.ini
+__pycache__/
