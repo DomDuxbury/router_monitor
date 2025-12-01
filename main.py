@@ -10,7 +10,7 @@ warnings.filterwarnings("ignore")
 
 
 def is_owner_home(clients: ClientList, phone_mac_address):
-    return clients.check_if_client_is_connected_by_mac(phone_mac_address)
+    return
 
 
 def get_laptop_mode(clients: ClientList):
@@ -49,7 +49,7 @@ def main():
     config = configparser.ConfigParser()
     config.read(".network_config.ini")
 
-    phonename = config.get("General", "phonename")
+    phone_mac_address = config.get("General", "phonename")
     router = Router(config_file=".router_config.ini")
 
     app_traffic = router.get_app_traffic_24hours()
@@ -59,7 +59,7 @@ def main():
     clients = router.get_client_info()
     print(clients)
 
-    owner_is_home = is_owner_home(clients, phonename)
+    owner_is_home = clients.check_if_client_is_connected_by_mac(phone_mac_address)
     laptop_mode = get_laptop_mode(clients)
     extra_clients_connected = get_extra_clients_connected(
         clients, owner_is_home, laptop_mode
@@ -72,12 +72,6 @@ def main():
         print("Dom is home")
     else:
         print("Dom is not home")
-
-    # print(f"data download: {round(change_download / 1000)}kb")
-    # print(f"data upload: {round(change_upload / 1000)}kb")
-
-    # last_download = total_download
-    # last_upload = total_upload
 
     # if x > 0:
     #     producer.send(
