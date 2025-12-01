@@ -47,12 +47,3 @@ class AppData(Data):
 
     def __repr__(self):
         return self.__str__()
-
-
-@dataclass
-class Device:
-    name: str
-    nickname: str
-    mac_address: MacAddress
-    vendor: str
-    connection_time: connectionTime

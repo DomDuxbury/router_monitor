@@ -65,7 +65,7 @@ class Router:
 
         self.access_token = login(username, password)
 
-    def _make_api_request(self, url: str, extra_headers=None):
+    def _make_api_request(self, url: str, extra_headers={}):
         return requests.get(
             url,
             headers={

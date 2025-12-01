@@ -12,7 +12,7 @@ class Client:
 
 class ClientList(list[Client]):
     def check_if_client_is_connected_by_mac(self, mac: str):
-        return _check_if_client_is_connected(self, attribute="mac", value=mac)
+        return _check_if_client_is_connected(self, attribute="mac_address", value=mac)
 
     def check_if_client_is_connected_by_name(self, name: str):
         return _check_if_client_is_connected(self, attribute="name", value=name)
