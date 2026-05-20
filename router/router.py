@@ -56,13 +56,7 @@ def login(username: str, password: str) -> str | None:
 class Router:
     access_token: str | None
 
-    def __init__(self, config_file: str):
-        config = configparser.ConfigParser()
-        config.read(config_file)
-
-        username = config.get("Secret", "username")
-        password = config.get("Secret", "password")
-
+    def __init__(self, username: str, password: str):
         self.access_token = login(username, password)
 
     def _make_api_request(self, url: str, extra_headers={}):

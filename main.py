@@ -2,6 +2,7 @@
 from router import Router, ClientList
 import warnings
 import configparser
+import sys
 
 warnings.filterwarnings("ignore")
 
@@ -40,17 +41,17 @@ def get_extra_clients_connected(
     return num_clients_online - expected_clients
 
 
-def main():
+def main(admin: str, password: str):
     # producer = KafkaProducer(
     #     bootstrap_servers="localhost:9092",
     #     value_serializer=lambda v: json.dumps(v).encode("utf-8"),
     # )
 
     config = configparser.ConfigParser()
-    config.read(".network_config.ini")
+    config.read("config.ini")
 
-    phone_mac_address = config.get("General", "phonename")
-    router = Router(config_file=".router_config.ini")
+    phone_mac_address = config.get("General", "phonemac")
+    router = Router(admin, password)
 
     app_traffic = router.get_app_traffic_24hours()
     print(app_traffic)
@@ -89,4 +90,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1], sys.argv[2])
