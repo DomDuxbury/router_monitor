@@ -54,26 +54,6 @@ def main():
     phone_mac_address = config.get("General", "phonename")
     router = Router(config_file=".router_config.ini")
 
-    # app_traffic = router.get_app_traffic_24hours()
-    # print(app_traffic)
-    # network_traffic = router.get_network_traffic_24hours()[1].downloaded_bytes
-    # print("First 24 hour window sum")
-    # print(network_traffic)
-    # hourly_traffic = router.get_network_traffic_hourly(device_mac_address="9A:B7:1E:50:08:70")
-    # print("Bucketed traffic")
-    # print(hourly_traffic)
-    # byte_sum = 0
-    # for bucket in hourly_traffic:
-    #     byte_sum += bucket.downloaded_bytes
-
-    # print("Traffic bucket sum")
-    # print(byte_sum)
-
-    # time.sleep(30)
-    # network_traffic = router.get_network_traffic_24hours()[1]
-    # print("Second 24 hour window - after 10 secs")
-    # print(network_traffic)
-
     last_traffic = router.get_all_time_traffic()
     last_read_time = datetime.utcnow()
 
