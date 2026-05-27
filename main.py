@@ -1,12 +1,14 @@
-# import time
-from router import Router, ClientList
+import time
+from router import Router, ClientList, DataDelta
+from datetime import datetime
 import warnings
 import configparser
 
-warnings.filterwarnings("ignore")
 
-# from kafka import KafkaProducer
-# import json
+from kafka import KafkaProducer
+import json
+
+warnings.filterwarnings("ignore")
 
 
 def is_owner_home(clients: ClientList, phone_mac_address):
@@ -29,7 +31,7 @@ def get_extra_clients_connected(
     clients: ClientList, owner_is_home: bool, laptop_mode: bool
 ):
     num_clients_online = len(list(clients))
-    expected_clients = 1
+    expected_clients = 2
 
     if owner_is_home:
         expected_clients = expected_clients + 1
@@ -41,10 +43,10 @@ def get_extra_clients_connected(
 
 
 def main():
-    # producer = KafkaProducer(
-    #     bootstrap_servers="localhost:9092",
-    #     value_serializer=lambda v: json.dumps(v).encode("utf-8"),
-    # )
+    producer = KafkaProducer(
+        bootstrap_servers="localhost:9092",
+        value_serializer=lambda v: json.dumps(v).encode("utf-8"),
+    )
 
     config = configparser.ConfigParser()
     config.read(".network_config.ini")
@@ -52,40 +54,66 @@ def main():
     phone_mac_address = config.get("General", "phonename")
     router = Router(config_file=".router_config.ini")
 
-    app_traffic = router.get_app_traffic_24hours()
-    print(app_traffic)
-    network_traffic = router.get_network_traffic_24hours()
-    print(network_traffic)
-    clients = router.get_client_info()
-    print(clients)
+    # app_traffic = router.get_app_traffic_24hours()
+    # print(app_traffic)
+    # network_traffic = router.get_network_traffic_24hours()[1].downloaded_bytes
+    # print("First 24 hour window sum")
+    # print(network_traffic)
+    # hourly_traffic = router.get_network_traffic_hourly(device_mac_address="9A:B7:1E:50:08:70")
+    # print("Bucketed traffic")
+    # print(hourly_traffic)
+    # byte_sum = 0
+    # for bucket in hourly_traffic:
+    #     byte_sum += bucket.downloaded_bytes
 
-    owner_is_home = clients.check_if_client_is_connected_by_mac(phone_mac_address)
-    laptop_mode = get_laptop_mode(clients)
-    extra_clients_connected = get_extra_clients_connected(
-        clients, owner_is_home, laptop_mode
-    )
+    # print("Traffic bucket sum")
+    # print(byte_sum)
 
-    print(f"laptop mode: {laptop_mode}")
-    print(f"extra clients connected: {extra_clients_connected}")
+    # time.sleep(30)
+    # network_traffic = router.get_network_traffic_24hours()[1]
+    # print("Second 24 hour window - after 10 secs")
+    # print(network_traffic)
 
-    if owner_is_home:
-        print("Dom is home")
-    else:
-        print("Dom is not home")
+    last_traffic = router.get_all_time_traffic()
+    last_read_time = datetime.utcnow()
 
-    # if x > 0:
-    #     producer.send(
-    #         "jsonRouterOutput",
-    #         {
-    #             "laptop_mode": laptop_mode,
-    #             "num_extra_clients": extra_clients_connected,
-    #             "owner_is_home": owner_is_home,
-    #             "data_download": change_upload,
-    #             "data_upload": change_download,
-    #         },
-    #     )
+    for x in range(0, 100000):
+        time.sleep(1)
 
-    # time.sleep(5)
+        new_traffic = router.get_all_time_traffic()
+        new_read_time = datetime.utcnow()
+        download_diff = new_traffic.downloaded_bytes - last_traffic.downloaded_bytes
+        upload_diff = new_traffic.uploaded_bytes - last_traffic.uploaded_bytes
+        data_delta = DataDelta(
+            downloaded_bytes=download_diff,
+            uploaded_bytes=upload_diff,
+            delta_start=last_read_time,
+            delta_end=new_read_time,
+            length_secs=0,
+        )
+
+        clients = router.get_client_info()
+        owner_is_home = clients.check_if_client_is_connected_by_mac(phone_mac_address)
+        laptop_mode = get_laptop_mode(clients)
+        extra_clients_connected = get_extra_clients_connected(
+            clients, owner_is_home, laptop_mode
+        )
+
+        producer.send(
+            "routerTickData",
+            {
+                "laptop_mode": laptop_mode,
+                "num_extra_clients": extra_clients_connected,
+                "clients": clients.as_list_of_dicts(),
+                "owner_is_home": owner_is_home,
+                "data_download": data_delta.downloaded_bytes,
+                "data_upload": data_delta.uploaded_bytes,
+                "window_length": data_delta.length_secs,
+            },
+        )
+
+        last_traffic = new_traffic
+        last_read_time = new_read_time
 
 
 if __name__ == "__main__":

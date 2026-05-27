@@ -1,4 +1,5 @@
 from dataclasses import dataclass, fields
+from datetime import datetime
 
 type MacAddress = str
 type DNSGroup = str
@@ -38,7 +39,7 @@ class DeviceData(Data):
     mac_address: MacAddress
 
     def __repr__(self):
-        return self.__str__()
+        return self.__str__() + "\n"
 
 
 @dataclass
@@ -46,4 +47,26 @@ class AppData(Data):
     dns_group: DNSGroup
 
     def __repr__(self):
-        return self.__str__()
+        return self.__str__() + "\n"
+
+
+@dataclass
+class HourlyData(Data):
+    hour_beginning: int
+    device: MacAddress | str
+
+    def __repr__(self):
+        return self.__str__() + "\n"
+
+
+@dataclass
+class DataDelta(Data):
+    delta_start: datetime
+    delta_end: datetime
+    length_secs: float
+
+    def __post_init__(self):
+        self.length_secs = (self.delta_end - self.delta_start).total_seconds()
+
+    def __repr__(self):
+        return self.__str__() + "\n"
