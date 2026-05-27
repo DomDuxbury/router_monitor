@@ -1,0 +1,46 @@
+{
+    "type": "object",
+    "properties": {
+        "laptop_mode": {
+            "type": "string"
+        },
+        "num_extra_clients": {
+            "type": "number"
+        },
+        "clients": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "nickname": {
+                        "type": "string"
+                    },
+                    "mac_address": {
+                        "type": "string"
+                    },
+                    "vendor": {
+                        "type": "string"
+                    },
+                    "connection_time": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "owner_is_home": {
+            "type": "boolean"
+        },
+        "data_download": {
+            "type": "number"
+        },
+        "data_upload": {
+            "type": "number"
+        },
+        "window_length": {
+            "type": "number"
+        }
+    }
+}

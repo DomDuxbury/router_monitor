@@ -1,7 +1,6 @@
 from datetime import datetime
-from router.router_data import AppData, DeviceData
+from router.router_data import AppData, DeviceData, HourlyData, Data
 from router.client import Client, ClientList
-import configparser
 import requests
 import json
 import base64
@@ -97,6 +96,52 @@ class Router:
             )
             for data in json_content
         ]
+
+    def get_network_traffic_hourly(
+        self, end_time: datetime = datetime.now(), device_mac_address: str = "all"
+    ) -> list[HourlyData]:
+        total_seconds = round(int((end_time - datetime(1970, 1, 1)).total_seconds()))
+        current_hour = datetime.now().hour
+        url = f"https://192.168.50.1:8443/getWanTraffic.asp?client={device_mac_address}&mode=hour&dura=24&date={total_seconds}"
+        res = self._make_api_request(url)
+        str_content = res.content.decode("UTF-8").split("\n")[1].split("=")[1]
+        json_content = json.loads(str_content.split(";")[0])
+        return [
+            HourlyData(
+                hour_beginning=(i + current_hour) % 24,
+                uploaded_bytes=data[0],
+                downloaded_bytes=data[1],
+                device=device_mac_address,
+            )
+            for i, data in enumerate(json_content)
+        ]
+
+    def get_all_time_traffic(self) -> Data:
+        url = "https://192.168.50.1:8443/update.cgi"
+        body = {
+            "output": "netdev",
+        }
+        res = requests.post(
+            url,
+            headers={
+                "Cookie": f"asus_s_token={self.access_token}; clickedItem_tab=0",
+                "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:145.0) Gecko/20100101 Firefox/145.0",
+                "Accept": "text/javascript, application/javascript, application/ecmascript, application/x-ecmascript, */*; q=0.01",
+                "Accept-Language": "en-US,en;q=0.5",
+                "Accept-Encoding": "gzip, deflate, br, zstd",
+                "X-Requested-With": "XMLHttpRequest",
+                "Connection": "keep-alive",
+                "Referer": "https://192.168.50.1:8443/Main_TrafficMonitor_realtime.asp",
+                "Sec-Fetch-Dest": "empty",
+                "Sec-Fetch-Mode": "cors",
+            },
+            verify=False,
+            data=body,
+        )
+        data = res.content.decode().split("'INTERNET':")[1].split("\n")[0]
+        download = int(data.split("rx:")[1].split(",tx:")[0], base=16)
+        upload = int(data.split("tx:")[1].split("}")[0], base=16)
+        return Data(uploaded_bytes=upload, downloaded_bytes=download)
 
     def get_client_info(self) -> ClientList:
         url = "https://192.168.50.1:8443/update_clients.asp?_=1764602439985"
