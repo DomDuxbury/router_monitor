@@ -46,10 +46,14 @@ def login(username: str, password: str) -> str | None:
         verify=False,
     )
 
-    for c in res.cookies:
-        cookie = c.value
+    if len(res.cookies) == 0:
+        raise SystemExit(ValueError("Error: Wrong Username or Password"))
+    else:
+        for c in res.cookies:
+            cookie = c.value
 
-    return cookie
+        print("Login Success")
+        return cookie
 
 
 class Router:
@@ -70,10 +74,10 @@ class Router:
         )
 
     def get_app_traffic_24hours(
-        self, end_time: datetime = datetime.now()
+        self, client_mac: str = "E8:BF:B8:AB:BD:2D", end_time: datetime = datetime.now()
     ) -> list[AppData]:
         total_seconds = round(int((end_time - datetime(1970, 1, 1)).total_seconds()))
-        url = f"https://192.168.50.1:8443/getWanTraffic.asp?client=E8:BF:B8:AB:BD:2D&mode=detail&dura=24&date={total_seconds}"
+        url = f"https://192.168.50.1:8443/getWanTraffic.asp?client={client_mac}&mode=detail&dura=24&date={total_seconds}"
         res = self._make_api_request(url)
         str_content = res.content.decode("UTF-8").split("\n")[1].split("=")[1]
         json_content = json.loads(str_content.split(";")[0])
