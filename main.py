@@ -1,5 +1,5 @@
 import time
-from router import Router, ClientList, DataDelta
+from router import Router, DataDelta
 from datetime import datetime
 import warnings
 import configparser
@@ -12,37 +12,6 @@ import json
 warnings.filterwarnings("ignore")
 
 
-def is_owner_home(clients: ClientList, phone_mac_address):
-    return
-
-
-def get_laptop_mode(clients: ClientList):
-    linux_is_connected = clients.check_if_client_is_connected_by_name("cachyos-x8664")
-    windows_is_connected = clients.check_if_client_is_connected_by_vendor("MSFT 5 0")
-
-    if linux_is_connected:
-        return "linux"
-    elif windows_is_connected:
-        return "windows"
-    else:
-        return "offline"
-
-
-def get_extra_clients_connected(
-    clients: ClientList, owner_is_home: bool, laptop_mode: bool
-):
-    num_clients_online = len(list(clients))
-    expected_clients = 2
-
-    if owner_is_home:
-        expected_clients = expected_clients + 1
-
-    if laptop_mode != "offline":
-        expected_clients = expected_clients + 1
-
-    return num_clients_online - expected_clients
-
-
 def main(admin: str, password: str):
     producer = KafkaProducer(
         bootstrap_servers="localhost:9092",
@@ -52,7 +21,9 @@ def main(admin: str, password: str):
     config = configparser.ConfigParser()
     config.read("config.ini")
 
-    phone_mac_address = config.get("General", "phonemac")
+    phone_mac_address = config.get("General", "phone_mac")
+    expected_clients = int(config.get("General", "expected_clients"))
+
     router = Router(admin, password)
 
     last_traffic = router.get_all_time_traffic()
@@ -74,10 +45,11 @@ def main(admin: str, password: str):
         )
 
         clients = router.get_client_info()
+
         owner_is_home = clients.check_if_client_is_connected_by_mac(phone_mac_address)
-        laptop_mode = get_laptop_mode(clients)
-        extra_clients_connected = get_extra_clients_connected(
-            clients, owner_is_home, laptop_mode
+        laptop_mode = clients.get_laptop_mode()
+        extra_clients_connected = clients.get_extra_clients_connected(
+            expected_clients, owner_is_home, laptop_mode
         )
 
         producer.send(
