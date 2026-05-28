@@ -1,5 +1,5 @@
 from datetime import datetime
-from router.router_data import AppData, DeviceData, HourlyData, Data
+from router.router_data import AppData, DeviceData, HourlyData, Data, DataDelta
 from router.client import Client, ClientList
 import requests
 import json
@@ -58,9 +58,13 @@ def login(username: str, password: str) -> str | None:
 
 class Router:
     access_token: str | None
+    last_traffic: Data
+    last_read_time: datetime
 
     def __init__(self, username: str, password: str):
         self.access_token = login(username, password)
+        self.last_read_time = datetime.utcnow()
+        self.last_traffic = self.get_all_time_traffic()
 
     def _make_api_request(self, url: str, extra_headers={}):
         return requests.get(
@@ -178,3 +182,25 @@ class Router:
                 for mac in json_content["maclist"]
             ]
         )
+
+    def get_traffic_data_tick(self) -> DataDelta:
+        new_read_time = datetime.utcnow()
+        new_traffic = self.get_all_time_traffic()
+
+        download_diff = (
+            new_traffic.downloaded_bytes - self.last_traffic.downloaded_bytes
+        )
+        upload_diff = new_traffic.uploaded_bytes - self.last_traffic.uploaded_bytes
+
+        data_delta = DataDelta(
+            downloaded_bytes=download_diff,
+            uploaded_bytes=upload_diff,
+            delta_start=self.last_read_time,
+            delta_end=new_read_time,
+            length_secs=0,
+        )
+
+        self.last_traffic = new_traffic
+        self.last_read_time = new_read_time
+
+        return data_delta

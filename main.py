@@ -1,6 +1,5 @@
 import time
-from router import Router, DataDelta
-from datetime import datetime
+from router import Router
 import warnings
 import configparser
 import sys
@@ -23,26 +22,14 @@ def main(admin: str, password: str):
 
     phone_mac_address = config.get("General", "phone_mac")
     expected_clients = int(config.get("General", "expected_clients"))
+    interval_secs = int(config.get("General", "interval_secs"))
 
     router = Router(admin, password)
 
-    last_traffic = router.get_all_time_traffic()
-    last_read_time = datetime.utcnow()
-
     for x in range(0, 100000):
-        time.sleep(1)
+        time.sleep(interval_secs)
 
-        new_traffic = router.get_all_time_traffic()
-        new_read_time = datetime.utcnow()
-        download_diff = new_traffic.downloaded_bytes - last_traffic.downloaded_bytes
-        upload_diff = new_traffic.uploaded_bytes - last_traffic.uploaded_bytes
-        data_delta = DataDelta(
-            downloaded_bytes=download_diff,
-            uploaded_bytes=upload_diff,
-            delta_start=last_read_time,
-            delta_end=new_read_time,
-            length_secs=0,
-        )
+        tick_data = router.get_traffic_data_tick()
 
         clients = router.get_client_info()
 
@@ -59,14 +46,11 @@ def main(admin: str, password: str):
                 "num_extra_clients": extra_clients_connected,
                 "clients": clients.as_list_of_dicts(),
                 "owner_is_home": owner_is_home,
-                "data_download": data_delta.downloaded_bytes,
-                "data_upload": data_delta.uploaded_bytes,
-                "window_length": data_delta.length_secs,
+                "data_download": tick_data.downloaded_bytes,
+                "data_upload": tick_data.uploaded_bytes,
+                "window_length": tick_data.length_secs,
             },
         )
-
-        last_traffic = new_traffic
-        last_read_time = new_read_time
 
 
 if __name__ == "__main__":
