@@ -54,4 +54,7 @@ def main(admin: str, password: str):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2])
+    with open(sys.argv[2], "r") as temp_password_file:
+        password = temp_password_file.readline().strip()
+
+    main(sys.argv[1], password)
