@@ -1,0 +1,10 @@
+[Unit]                                                                           
+Description=Router Monitor                                                       
+                                                                                 
+[Service]                                                                        
+User=dom                                                                         
+ExecStart=docker-compose --project-directory [insert_project_directory]/ up
+Restart=on-failure                                                               
+                                                                                 
+[Install]                                                                        
+WantedBy=multi-user.target
