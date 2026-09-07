@@ -2,7 +2,7 @@ services:
   arroyo:                                                                        
     image: ghcr.io/arroyosystems/arroyo:latest                                   
     ports:                                                                       
-      - "5115:5115"                                                              
+      - "5114:5115"                                                              
     depends_on:                                                                  
       - kafka                                                                    
     networks:                                                                    
@@ -11,27 +11,27 @@ services:
   kafka:                                                                         
     image: apache/kafka:latest                                                   
     ports:                                                                       
-      - "9092:9092"                                                              
+      - "9091:9092"                                                              
     environment:                                                                 
       # Configure listeners for both docker and host communication               
-      KAFKA_LISTENERS: CONTROLLER://:9091,INTERNAL://:9092                       
-      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092                          
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: CONTROLLER://:9090,LOCALHOST://:9092, INTERNAL://:9093    
+      KAFKA_ADVERTISED_LISTENERS: LOCALHOST://localhost:9091, INTERNAL://kafka:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,LOCALHOST:PLAINTEXT
                                                                                  
       # Settings required for KRaft mode                                         
-      KAFKA_NODE_ID: 1                                                           
+      KAFKA_NODE_ID: 0                                                           
       KAFKA_PROCESS_ROLES: broker,controller                                     
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER                                
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9091                           
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 0@localhost:9091                           
                                                                                  
       # Listener to use for broker-to-broker communication                       
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL                                 
                                                                                  
       # Required for a single node cluster                                       
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1                                  
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 0                                  
     networks:                                                                    
       - router_monitor                                                           
                                                                                  
 networks:                                                                        
   router_monitor:                                                                
-    name: router_monitor                                
+    name: router_monitor                                   
