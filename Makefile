@@ -4,3 +4,6 @@ install:
 
 start:
 	./run.sh
+
+docker:
+	docker-compose up
