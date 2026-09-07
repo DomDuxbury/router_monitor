@@ -17,6 +17,9 @@ class ClientList(list[Client]):
     def check_if_client_is_connected_by_name(self, name: str):
         return _check_if_client_is_connected(self, attribute="name", value=name)
 
+    def check_if_client_is_connected_by_nickname(self, nickname: str):
+        return _check_if_client_is_connected(self, attribute="nickname", value=nickname)
+
     def check_if_client_is_connected_by_vendor(self, vendor: str):
         return _check_if_client_is_connected(self, attribute="vendor", value=vendor)
 
@@ -24,8 +27,8 @@ class ClientList(list[Client]):
         return [asdict(client) for client in self]
 
     def get_laptop_mode(self):
-        linux_is_connected = self.check_if_client_is_connected_by_name("cachyos-x8664")
-        windows_is_connected = self.check_if_client_is_connected_by_vendor("MSFT 5 0")
+        linux_is_connected = self.check_if_client_is_connected_by_nickname("Linux Laptop")
+        windows_is_connected = self.check_if_client_is_connected_by_nickname("Windows Laptop")
 
         if linux_is_connected:
             return "linux"
@@ -34,16 +37,23 @@ class ClientList(list[Client]):
         else:
             return "offline"
 
+    def get_is_work_laptop_connected(self):
+        return self.check_if_client_is_connected_by_nickname("Work Laptop")
+
+
     def get_extra_clients_connected(
         self, expected_clients: int, owner_is_home: bool, laptop_mode: bool
     ):
         num_clients_online = len(list(self))
 
         if owner_is_home:
-            expected_clients = expected_clients + 1
+            expected_clients += 1
 
         if laptop_mode != "offline":
-            expected_clients = expected_clients + 1
+            expected_clients += 1
+
+        if work_laptop_is_connected:
+            expected_clients += 1
 
         return num_clients_online - expected_clients
 
