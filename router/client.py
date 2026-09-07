@@ -27,8 +27,12 @@ class ClientList(list[Client]):
         return [asdict(client) for client in self]
 
     def get_laptop_mode(self):
-        linux_is_connected = self.check_if_client_is_connected_by_nickname("Linux Laptop")
-        windows_is_connected = self.check_if_client_is_connected_by_nickname("Windows Laptop")
+        linux_is_connected = self.check_if_client_is_connected_by_nickname(
+            "Linux Laptop"
+        )
+        windows_is_connected = self.check_if_client_is_connected_by_nickname(
+            "Windows Laptop"
+        )
 
         if linux_is_connected:
             return "linux"
@@ -40,9 +44,12 @@ class ClientList(list[Client]):
     def get_is_work_laptop_connected(self):
         return self.check_if_client_is_connected_by_nickname("Work Laptop")
 
-
     def get_extra_clients_connected(
-        self, expected_clients: int, owner_is_home: bool, laptop_mode: bool
+        self,
+        expected_clients: int,
+        owner_is_home: bool,
+        laptop_mode: bool,
+        work_laptop_is_connected: bool,
     ):
         num_clients_online = len(list(self))
 
