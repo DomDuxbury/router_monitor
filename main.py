@@ -35,7 +35,7 @@ def main(admin: str, password: str):
 
         owner_is_home = clients.check_if_client_is_connected_by_mac(phone_mac_address)
         laptop_mode = clients.get_laptop_mode()
-        work_laptop_is_connected = client.get_is_work_laptop_connected()
+        work_laptop_is_connected = clients.get_is_work_laptop_connected()
 
         extra_clients_connected = clients.get_extra_clients_connected(
             expected_clients, owner_is_home, laptop_mode, work_laptop_is_connected
