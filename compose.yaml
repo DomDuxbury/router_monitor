@@ -9,20 +9,20 @@ services:
       - router_monitor                                                           
                                                                                  
   kafka:                                                                         
-    image: apache/kafka:latest                                                   
+    image: apache/kafka:4.1.2
     ports:                                                                       
       - "9092:9092"                                                              
     environment:                                                                 
       # Configure listeners for both docker and host communication               
-      KAFKA_LISTENERS: CONTROLLER://:9091,LOCALHOST://:9092, INTERNAL://:9093    
-      KAFKA_ADVERTISED_LISTENERS: LOCALHOST://localhost:9092, INTERNAL://kafka:9093
+      KAFKA_LISTENERS: CONTROLLER://:9091,LOCALHOST://:9092,INTERNAL://:9093    
+      KAFKA_ADVERTISED_LISTENERS: LOCALHOST://localhost:9092,INTERNAL://kafka:9093
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,LOCALHOST:PLAINTEXT
                                                                                  
       # Settings required for KRaft mode                                         
       KAFKA_NODE_ID: 1                                                           
       KAFKA_PROCESS_ROLES: broker,controller                                     
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER                                
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 0@localhost:9091                           
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9091                           
                                                                                  
       # Listener to use for broker-to-broker communication                       
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL                                 
