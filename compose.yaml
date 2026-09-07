@@ -28,7 +28,7 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL                                 
                                                                                  
       # Required for a single node cluster                                       
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 0                                  
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     networks:                                                                    
       - router_monitor                                                           
                                                                                  
