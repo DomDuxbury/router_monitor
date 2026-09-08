@@ -219,7 +219,6 @@ class Router:
             uploaded_bytes=upload_diff,
             delta_start=self.last_read_time,
             delta_end=new_read_time,
-            length_secs=0,
         )
 
         self.last_traffic = new_traffic
