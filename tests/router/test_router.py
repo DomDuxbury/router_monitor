@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from types import SimpleNamespace
 
 from router.router import Router
@@ -7,7 +8,7 @@ from router.router_data import Data
 def test_router_get_traffic_data_tick_updates_state():
     router = Router.__new__(Router)
     router.last_traffic = Data(downloaded_bytes=1000, uploaded_bytes=2000)
-    router.last_read_time = DateTimeFactory.make_utc(2024, 1, 1)
+    router.last_read_time = datetime(2024, 1, 1, tzinfo=UTC)
     router.get_all_time_traffic = lambda: Data(
         downloaded_bytes=1500, uploaded_bytes=2600
     )
@@ -38,11 +39,3 @@ def test_router_get_client_info_parses_api_payload():
     assert clients[0].vendor == "Vendor"
     assert clients[1].nickname == "Linux Laptop"
     assert clients[1].vendor == "Vendor"
-
-
-class DateTimeFactory:
-    @staticmethod
-    def make_utc(year, month, day):
-        from datetime import UTC, datetime
-
-        return datetime(year, month, day, tzinfo=UTC)
