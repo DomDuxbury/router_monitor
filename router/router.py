@@ -1,9 +1,12 @@
-from datetime import datetime
-from router.router_data import AppData, DeviceData, HourlyData, Data, DataDelta
-from router.client import Client, ClientList
-import requests
-import json
 import base64
+import json
+from datetime import UTC, datetime
+from typing import Optional
+
+import requests
+
+from router.client import Client, ClientList
+from router.router_data import AppData, Data, DataDelta, DeviceData, HourlyData
 
 
 def login(username: str, password: str) -> str | None:
@@ -63,10 +66,11 @@ class Router:
 
     def __init__(self, username: str, password: str):
         self.access_token = login(username, password)
-        self.last_read_time = datetime.utcnow()
+        self.last_read_time = datetime.now(tz=UTC)
         self.last_traffic = self.get_all_time_traffic()
 
-    def _make_api_request(self, url: str, extra_headers={}):
+    def _make_api_request(self, url: str, extra_headers=None):
+        extra_headers = extra_headers if extra_headers else {}
         return requests.get(
             url,
             headers={
@@ -78,9 +82,15 @@ class Router:
         )
 
     def get_app_traffic_24hours(
-        self, client_mac: str = "E8:BF:B8:AB:BD:2D", end_time: datetime = datetime.now()
+        self, client_mac: str = "E8:BF:B8:AB:BD:2D", end_time: Optional[datetime] = None
     ) -> list[AppData]:
-        total_seconds = round(int((end_time - datetime(1970, 1, 1)).total_seconds()))
+
+        # If "now" is set as the default argument for the function it will be calculated once at definition time.
+        end_time = end_time if end_time else datetime.now(tz=UTC)
+
+        total_seconds = round(
+            int((end_time - datetime(1970, 1, 1, tzinfo=UTC)).total_seconds())
+        )
         url = f"https://192.168.50.1:8443/getWanTraffic.asp?client={client_mac}&mode=detail&dura=24&date={total_seconds}"
         res = self._make_api_request(url)
         str_content = res.content.decode("UTF-8").split("\n")[1].split("=")[1]
@@ -91,9 +101,15 @@ class Router:
         ]
 
     def get_network_traffic_24hours(
-        self, end_time: datetime = datetime.now()
+        self, end_time: Optional[datetime] = None
     ) -> list[DeviceData]:
-        total_seconds = round(int((end_time - datetime(1970, 1, 1)).total_seconds()))
+
+        # If "now" is set as the default argument for the function it will be calculated once at definition time.
+        end_time = end_time if end_time else datetime.now(tz=UTC)
+
+        total_seconds = round(
+            int((end_time - datetime(1970, 1, 1, tzinfo=UTC)).total_seconds())
+        )
         url = f"https://192.168.50.1:8443/getAppTraffic.asp?client=all&mode=detail&dura=24&date={total_seconds}"
         res = self._make_api_request(url)
         str_content = res.content.decode("UTF-8").split("\n")[1].split("=")[1]
@@ -106,10 +122,16 @@ class Router:
         ]
 
     def get_network_traffic_hourly(
-        self, end_time: datetime = datetime.now(), device_mac_address: str = "all"
+        self, end_time: Optional[datetime] = None, device_mac_address: str = "all"
     ) -> list[HourlyData]:
-        total_seconds = round(int((end_time - datetime(1970, 1, 1)).total_seconds()))
-        current_hour = datetime.now().hour
+
+        # If "now" is set as the default argument for the function it will be calculated once at definition time.
+        end_time = end_time if end_time else datetime.now(tz=UTC)
+
+        total_seconds = round(
+            int((end_time - datetime(1970, 1, 1, tzinfo=UTC)).total_seconds())
+        )
+        current_hour = datetime.now(tz=UTC).hour
         url = f"https://192.168.50.1:8443/getWanTraffic.asp?client={device_mac_address}&mode=hour&dura=24&date={total_seconds}"
         res = self._make_api_request(url)
         str_content = res.content.decode("UTF-8").split("\n")[1].split("=")[1]
@@ -184,7 +206,7 @@ class Router:
         )
 
     def get_traffic_data_tick(self) -> DataDelta:
-        new_read_time = datetime.utcnow()
+        new_read_time = datetime.now(tz=UTC)
         new_traffic = self.get_all_time_traffic()
 
         download_diff = (
@@ -197,7 +219,6 @@ class Router:
             uploaded_bytes=upload_diff,
             delta_start=self.last_read_time,
             delta_end=new_read_time,
-            length_secs=0,
         )
 
         self.last_traffic = new_traffic

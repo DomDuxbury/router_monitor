@@ -65,7 +65,17 @@ class DataDelta(Data):
     delta_end: datetime
     length_secs: float
 
-    def __post_init__(self):
+    def __init__(
+        self,
+        downloaded_bytes: int,
+        uploaded_bytes: int,
+        delta_start: datetime,
+        delta_end: datetime,
+    ):
+        self.downloaded_bytes = downloaded_bytes
+        self.uploaded_bytes = uploaded_bytes
+        self.delta_start = delta_start
+        self.delta_end = delta_end
         self.length_secs = (self.delta_end - self.delta_start).total_seconds()
 
     def __repr__(self):

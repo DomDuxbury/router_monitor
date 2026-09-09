@@ -1,17 +1,17 @@
-import time
-from router import Router
-import warnings
 import configparser
+import json
 import sys
-
+import time
+import warnings
 
 from kafka import KafkaProducer
-import json
+
+from router import Router
 
 warnings.filterwarnings("ignore")
 
 
-def main(admin: str, password: str):
+def main(admin: str, password: str, num_ticks: int = 100000):
     producer = KafkaProducer(
         bootstrap_servers="localhost:9092",
         value_serializer=lambda v: json.dumps(v).encode("utf-8"),
@@ -26,7 +26,7 @@ def main(admin: str, password: str):
 
     router = Router(admin, password)
 
-    for x in range(0, 100000):
+    for x in range(num_ticks):
         time.sleep(interval_secs)
 
         tick_data = router.get_traffic_data_tick()
